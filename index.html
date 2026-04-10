@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Moon AI | Russia Edition 🌕</title>
+    <title>Moon AI | Final System</title>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/tokyo-night-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
@@ -11,7 +11,7 @@
         :root { --bg: #050508; --accent: #00f2ff; --panel: #0d0d12; --text: #ffffff; }
         body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; display: flex; height: 100vh; overflow: hidden; }
         
-        /* Вход */
+        /* Окно входа */
         #key-modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.95); display: flex; align-items: center; justify-content: center; z-index: 1000;
@@ -21,34 +21,45 @@
             text-align: center; max-width: 450px; width: 90%; box-shadow: 0 0 50px rgba(0,242,255,0.1);
         }
 
+        /* Сайдбар */
         .sidebar { width: 280px; background: var(--panel); border-right: 1px solid #222; padding: 25px; display: flex; flex-direction: column; }
         .logo { font-size: 22px; font-weight: 900; color: var(--accent); letter-spacing: 2px; margin-bottom: 5px; }
         .status-dot { width: 8px; height: 8px; background: #555; border-radius: 50%; display: inline-block; margin-right: 5px; }
         .status-online { background: var(--accent); box-shadow: 0 0 10px var(--accent); }
 
+        /* Чат */
         .main { flex: 1; display: flex; flex-direction: column; position: relative; }
-        #chat { flex: 1; overflow-y: auto; padding: 30px 10%; display: flex; flex-direction: column; gap: 20px; }
+        #chat { flex: 1; overflow-y: auto; padding: 30px 10%; display: flex; flex-direction: column; gap: 20px; scroll-behavior: smooth; }
         
-        .bubble { max-width: 85%; padding: 18px 22px; border-radius: 20px; line-height: 1.6; font-size: 16px; }
+        .bubble { max-width: 85%; padding: 18px 22px; border-radius: 20px; line-height: 1.6; font-size: 16px; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } }
+
         .user { background: #1e1e2e; align-self: flex-end; border-bottom-right-radius: 4px; color: var(--accent); border: 1px solid rgba(0,242,255,0.2); }
         .ai { background: #11111b; align-self: flex-start; border: 1px solid #333; border-bottom-left-radius: 4px; }
         
-        .input-area { padding: 30px 10%; display: flex; gap: 12px; }
+        /* Ввод */
+        .input-area { padding: 30px 10%; background: linear-gradient(transparent, var(--bg) 50%); display: flex; gap: 12px; }
         .input-wrapper { flex: 1; background: #111; border: 1px solid #444; border-radius: 15px; display: flex; padding: 0 15px; }
         input { flex: 1; background: transparent; border: none; color: white; padding: 15px 5px; outline: none; font-size: 16px; }
-        .btn-send { background: var(--accent); border: none; padding: 0 25px; border-radius: 12px; cursor: pointer; font-weight: bold; }
+        .btn-send { background: var(--accent); border: none; padding: 0 25px; border-radius: 12px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .btn-send:hover { transform: scale(1.05); }
 
-        pre { background: #000 !important; padding: 15px; border-radius: 12px; border: 1px solid #222; overflow-x: auto; }
+        pre { background: #000 !important; padding: 15px; border-radius: 12px; border: 1px solid #222; overflow-x: auto; margin: 10px 0; }
+        code { font-family: 'Fira Code', monospace; font-size: 14px; }
+
+        #chat::-webkit-scrollbar { width: 4px; }
+        #chat::-webkit-scrollbar-thumb { background: #222; border-radius: 10px; }
     </style>
 </head>
 <body>
 
 <div id="key-modal">
     <div class="modal-content">
-        <h1 style="color:var(--accent); margin-bottom:10px;">MOON AI (RU)</h1>
-        <p style="opacity:0.7;">Версия с обходом блокировок. Вставь свой ключ AIzaSy...</p>
-        <input type="password" id="key-input" style="width:100%; margin: 20px 0; background: #000; color: #fff; padding: 12px; border-radius: 10px; border: 1px solid #444;" placeholder="Твой API-ключ">
-        <button onclick="saveKey()" style="width: 100%; height: 50px; background: var(--accent); border: none; border-radius: 10px; font-weight: bold; cursor: pointer;">АКТИВИРОВАТЬ</button>
+        <h1 style="color:var(--accent); margin:0;">MOON AI OS</h1>
+        <p style="opacity:0.7; font-size: 14px; margin-top: 10px;">Введите API-ключ Gemini для активации системы.</p>
+        <input type="password" id="key-input" style="width:100%; margin: 20px 0; box-sizing: border-box; background: #000; color: #fff; border: 1px solid #444; padding: 12px; border-radius: 10px;" placeholder="AIzaSy...">
+        <button onclick="saveKey()" style="width: 100%; height: 50px; background: var(--accent); border: none; border-radius: 10px; font-weight: bold; cursor: pointer;">ЗАПУСТИТЬ</button>
+        <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--accent); font-size:12px; display:block; margin-top:15px; text-decoration: none; opacity: 0.5;">Получить ключ (Google AI Studio)</a>
     </div>
 </div>
 
@@ -56,9 +67,11 @@
     <div class="logo">MOON AI 🌕</div>
     <div style="font-size: 11px; margin-bottom: 30px;">
         <span id="dot" class="status-dot"></span>
-        <span id="status-text" style="opacity:0.6;">ПОДКЛЮЧЕНИЕ...</span>
+        <span id="status-text" style="opacity:0.6;">СИСТЕМА OFFLINE</span>
     </div>
-    <button onclick="localStorage.removeItem('gemini_token'); location.reload();" style="background: transparent; color: #555; border: none; cursor: pointer; font-size: 12px; margin-top: auto;">Сбросить ключ</button>
+    
+    <button onclick="clearChat()" style="background: #1a1a24; color: white; border: 1px solid #333; padding: 10px; border-radius: 8px; cursor: pointer; margin-top: auto;">Очистить чат</button>
+    <button onclick="changeKey()" style="background: transparent; color: #555; border: none; padding: 10px; cursor: pointer; font-size: 12px;">Сбросить ключ</button>
 </aside>
 
 <main class="main">
@@ -67,29 +80,38 @@
         <div class="input-wrapper">
             <input type="text" id="msg-input" placeholder="Напиши Луне..." autocomplete="off">
         </div>
-        <button class="btn-send" onclick="askGemini()">▲</button>
+        <button class="btn-send" onclick="askGemini()">ОТПРАВИТЬ</button>
     </div>
 </main>
 
 <script type="module">
-    // Мы не используем тяжелую библиотеку Google, а пишем легкий и быстрый запрос
     let API_KEY = localStorage.getItem('gemini_token');
-    
-    // Специальный прокси-адрес для работы в РФ
-    const PROXY_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+    // Исправленный URL API с версией v1beta
+    const API_BASE = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
 
     if (API_KEY) {
         document.getElementById('key-modal').style.display = 'none';
         document.getElementById('dot').classList.add('status-online');
-        document.getElementById('status-text').innerText = "ONLINE (PROXY)";
+        document.getElementById('status-text').innerText = "ONLINE | GEMINI FLASH";
     }
 
     window.saveKey = function() {
         const val = document.getElementById('key-input').value.trim();
-        if (val.length > 20) {
+        if (val.startsWith('AIza')) {
             localStorage.setItem('gemini_token', val);
             location.reload();
+        } else {
+            alert("Пожалуйста, введи верный ключ!");
         }
+    }
+
+    window.changeKey = function() {
+        localStorage.removeItem('gemini_token');
+        location.reload();
+    }
+
+    window.clearChat = function() {
+        document.getElementById('chat').innerHTML = '';
     }
 
     window.askGemini = async function() {
@@ -99,15 +121,17 @@
 
         addBubble('user', text);
         input.value = '';
-        const loader = addBubble('ai', '<i>Луна обрабатывает сигнал...</i>');
+        const loader = addBubble('ai', '<i>Луна обрабатывает запрос...</i>');
 
         try {
-            // Прямой запрос через API ключ с обходом
-            const response = await fetch(`${PROXY_URL}?key=${API_KEY}`, {
+            // ФОРМИРУЕМ ЗАПРОС К GEMINI
+            const response = await fetch(`${API_BASE}?key=${API_KEY}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    contents: [{ parts: [{ text: text }] }]
+                    contents: [{
+                        parts: [{ text: text }]
+                    }]
                 })
             });
 
@@ -118,10 +142,11 @@
                 const aiText = data.candidates[0].content.parts[0].text;
                 addBubble('ai', aiText);
             } else {
-                throw new Error(data.error?.message || "Ошибка API");
+                throw new Error(data.error?.message || "Неизвестная ошибка API");
             }
         } catch (e) {
-            loader.innerHTML = `<span style='color:#ff5555'>Ошибка: ${e.message}. Попробуй создать новый ключ или включи VPN один раз.</span>`;
+            loader.innerHTML = `<span style='color:#ff5555'>Ошибка: ${e.message}. Попробуй включить VPN (Google может блокировать запросы из РФ).</span>`;
+            console.error(e);
         }
     }
 
@@ -132,7 +157,9 @@
         
         if (role === 'ai' && !text.includes('<i>')) {
             d.innerHTML = marked.parse(text);
-            d.querySelectorAll('pre code').forEach((block) => hljs.highlightElement(block));
+            d.querySelectorAll('pre code').forEach((block) => {
+                hljs.highlightElement(block);
+            });
         } else {
             d.innerHTML = text;
         }
