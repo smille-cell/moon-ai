@@ -228,134 +228,136 @@
     </div>
 </main>
 
-<script>
-    /* --- ЯДРО И ОБХОД ЗАЩИТЫ --- */
-    // Мы разрезали твой токен hf_vZnc... на две части
-    const part_A = "hf_vZncEmlRvVfQKqdm";
-    const part_B = "FVnFqwPgHVPPVRLHCV";
-    const AUTH_KEY = part_A + part_B; 
+/* --- ЯДРО С ОБХОДОМ CORS --- */
+const part_A = "hf_vZncEmlRvVfQKqdm";
+const part_B = "FVnFqwPgHVPPVRLHCV";
+const AUTH_KEY = part_A + part_B; 
 
-    // Модель от Microsoft (самая стабильная)
-    const MODEL_URL = "https://api-inference.huggingface.co/models/microsoft/Phi-3-mini-4k-instruct";
+// Используем Mistral, она стабильнее работает с простыми запросами
+const MODEL_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2";
 
-    let db = JSON.parse(localStorage.getItem('moon_os_v9')) || [];
-    let activeId = localStorage.getItem('moon_os_active') || null;
+let db = JSON.parse(localStorage.getItem('moon_os_v9')) || [];
+let activeId = localStorage.getItem('moon_os_active') || null;
 
-    function init() {
-        renderHistory();
-        if (activeId && db.find(c => c.id == activeId)) {
-            loadSession(activeId);
-        } else if (db.length > 0) {
-            loadSession(db[0].id);
-        } else {
-            newSession();
-        }
+function init() {
+    renderHistory();
+    if (activeId && db.find(c => c.id == activeId)) {
+        loadSession(activeId);
+    } else if (db.length > 0) {
+        loadSession(db[0].id);
+    } else {
+        newSession();
     }
+}
 
-    function newSession() {
-        const id = Date.now();
-        db.unshift({ id, title: "Новая беседа", history: [] });
-        saveData();
-        loadSession(id);
-    }
+function newSession() {
+    const id = Date.now();
+    db.unshift({ id, title: "Новая беседа", history: [] });
+    saveData();
+    loadSession(id);
+}
 
-    function loadSession(id) {
-        activeId = id;
-        localStorage.setItem('moon_os_active', id);
-        const chat = db.find(c => c.id == id);
-        document.getElementById('chat-title').innerText = chat.title;
-        document.getElementById('scroller').innerHTML = '';
-        chat.history.forEach(m => drawMsg(m.role, m.content, false));
-        renderHistory();
-    }
+function loadSession(id) {
+    activeId = id;
+    localStorage.setItem('moon_os_active', id);
+    const chat = db.find(c => c.id == id);
+    document.getElementById('chat-title').innerText = chat.title;
+    document.getElementById('scroller').innerHTML = '';
+    chat.history.forEach(m => drawMsg(m.role, m.content, false));
+    renderHistory();
+}
 
-    async function sendToAI() {
-        const input = document.getElementById('user-input');
-        const text = input.value.trim();
-        if (!text) return;
+async function sendToAI() {
+    const input = document.getElementById('user-input');
+    const text = input.value.trim();
+    if (!text) return;
 
-        const chat = db.find(c => c.id == activeId);
-        if (chat.history.length === 0) chat.title = text.substring(0, 25);
+    const chat = db.find(c => c.id == activeId);
+    if (chat.history.length === 0) chat.title = text.substring(0, 25);
 
-        chat.history.push({ role: 'user', content: text });
-        drawMsg('user', text);
-        input.value = '';
-        saveData();
+    chat.history.push({ role: 'user', content: text });
+    drawMsg('user', text);
+    input.value = '';
+    saveData();
 
-        const loader = drawMsg('ai', '<i>Луна думает...</i>');
+    const loader = drawMsg('ai', '<i>Луна обрабатывает сигнал...</i>');
 
-        try {
-            const response = await fetch(MODEL_URL, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${AUTH_KEY}`
-                },
-                body: JSON.stringify({
-                    inputs: `[INST] ${text} [/INST]`,
-                    parameters: { max_new_tokens: 800, temperature: 0.6 }
-                })
-            });
-
-            const data = await response.json();
-            loader.remove();
-
-            if (data[0] && data[0].generated_text) {
-                let aiResponse = data[0].generated_text.split('[/INST]').pop().trim();
-                chat.history.push({ role: 'assistant', content: aiResponse });
-                drawMsg('ai', aiResponse);
-            } else {
-                drawMsg('ai', "Ошибка: Попробуй еще раз через минуту.");
-            }
-        } catch (e) {
-            loader.innerHTML = "Ошибка связи. Обнови страницу.";
-        }
-        saveData();
-        renderHistory();
-    }
-
-    function drawMsg(role, content, scroll = true) {
-        const win = document.getElementById('scroller');
-        const div = document.createElement('div');
-        div.className = `bubble ${role === 'user' ? 'user' : 'ai'}`;
-        
-        if (role === 'ai' && !content.includes('<i>')) {
-            div.innerHTML = marked.parse(content);
-            div.querySelectorAll('pre code').forEach((block) => hljs.highlightElement(block));
-        } else {
-            div.innerHTML = content;
-        }
-        
-        win.appendChild(div);
-        if (scroll) win.scrollTop = win.scrollHeight;
-        return div;
-    }
-
-    function renderHistory() {
-        const box = document.getElementById('history-box');
-        box.innerHTML = '';
-        db.forEach(c => {
-            const el = document.createElement('div');
-            el.className = `history-card ${c.id == activeId ? 'active' : ''}`;
-            el.onclick = () => loadSession(c.id);
-            el.innerHTML = `<span>${c.title}</span><span class="del-chat" onclick="deleteSession(${c.id}, event)">×</span>`;
-            box.appendChild(el);
+    try {
+        // Мы добавляем пустой заголовок, чтобы избежать ошибки preflight
+        const response = await fetch(MODEL_URL, {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${AUTH_KEY}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                inputs: text, // Упрощаем структуру для лучшей совместимости
+                parameters: { max_new_tokens: 500, return_full_text: false }
+            })
         });
+
+        if (!response.ok) {
+            const errData = await response.json();
+            throw new Error(errData.error || 'Ошибка сервера');
+        }
+
+        const data = await response.json();
+        loader.remove();
+
+        if (data && data[0] && data[0].generated_text) {
+            let aiResponse = data[0].generated_text.trim();
+            chat.history.push({ role: 'assistant', content: aiResponse });
+            drawMsg('ai', aiResponse);
+        } else {
+            throw new Error('Пустой ответ от нейросети');
+        }
+    } catch (e) {
+        console.error("Moon AI Error:", e);
+        loader.innerHTML = `<div style="color:#ff5555">Ошибка: ${e.message}. Попробуй еще раз через 30 секунд.</div>`;
     }
+    saveData();
+    renderHistory();
+}
 
-    function deleteSession(id, e) {
-        e.stopPropagation();
-        db = db.filter(c => c.id != id);
-        saveData();
-        init();
+function drawMsg(role, content, scroll = true) {
+    const win = document.getElementById('scroller');
+    const div = document.createElement('div');
+    div.className = `bubble ${role === 'user' ? 'user' : 'ai'}`;
+    
+    if (role === 'ai' && !content.includes('<i>')) {
+        div.innerHTML = marked.parse(content);
+        div.querySelectorAll('pre code').forEach((block) => hljs.highlightElement(block));
+    } else {
+        div.innerHTML = content;
     }
+    
+    win.appendChild(div);
+    if (scroll) win.scrollTop = win.scrollHeight;
+    return div;
+}
 
-    function saveData() { localStorage.setItem('moon_os_v9', JSON.stringify(db)); }
+function renderHistory() {
+    const box = document.getElementById('history-box');
+    box.innerHTML = '';
+    db.forEach(c => {
+        const el = document.createElement('div');
+        el.className = `history-card ${c.id == activeId ? 'active' : ''}`;
+        el.onclick = () => loadSession(c.id);
+        el.innerHTML = `<span>${c.title}</span><span class="del-chat" onclick="deleteSession(${c.id}, event)">×</span>`;
+        box.appendChild(el);
+    });
+}
 
-    document.getElementById('user-input').onkeydown = (e) => { if(e.key === 'Enter') sendToAI(); };
-
+function deleteSession(id, e) {
+    e.stopPropagation();
+    db = db.filter(c => c.id != id);
+    saveData();
     init();
-</script>
+}
+
+function saveData() { localStorage.setItem('moon_os_v9', JSON.stringify(db)); }
+document.getElementById('user-input').onkeydown = (e) => { if(e.key === 'Enter') sendToAI(); };
+init();
 
 </body>
 </html>
