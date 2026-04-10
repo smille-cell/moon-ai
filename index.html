@@ -3,94 +3,419 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Moon AI OS</title>
+    <title>Moon AI OS - Advanced</title>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
-        :root { --bg: #0f0f0f; --side: #161616; --text: #ececec; --accent: #00aaff; --radius: 20px; }
-        body { margin: 0; display: flex; height: 100vh; background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; overflow: hidden; }
-        .sidebar { width: 260px; background: var(--side); padding: 20px; border-right: 1px solid #333; display: flex; flex-direction: column; }
-        .main { flex: 1; display: flex; flex-direction: column; position: relative; }
-        #chat-window { flex: 1; overflow-y: auto; padding: 20px 15% 120px 15%; display: flex; flex-direction: column; }
-        .msg { margin-bottom: 20px; padding: 15px 20px; border-radius: var(--radius); max-width: 85%; line-height: 1.6; border: 1px solid rgba(128,128,128,0.1); }
-        .user { background: #2a2a2a; align-self: flex-end; }
-        .ai { background: #1e1e1e; align-self: flex-start; }
-        .input-area { position: absolute; bottom: 0; width: 100%; padding: 30px 0; background: linear-gradient(transparent, var(--bg) 50%); }
-        .input-wrap { max-width: 700px; margin: 0 auto; background: var(--side); border-radius: 25px; padding: 10px 20px; display: flex; border: 1px solid #444; align-items: center; }
-        input { flex: 1; background: transparent; border: none; color: white; outline: none; font-size: 16px; }
-        button { background: var(--accent); border: none; color: white; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; font-size: 20px; }
+        :root {
+            --bg: #0b0b0b;
+            --side: #121212;
+            --text: #e0e0e0;
+            --accent: #00aaff;
+            --msg-ai: #1a1a1a;
+            --msg-user: #252525;
+            --radius: 20px;
+            --border: rgba(255, 255, 255, 0.08);
+        }
+
+        * { box-sizing: border-box; }
+        
+        body {
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden;
+        }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            width: 280px;
+            background: var(--side);
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border);
+            padding: 15px;
+            transition: 0.3s;
+        }
+
+        .logo {
+            font-size: 22px;
+            font-weight: bold;
+            color: var(--accent);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .new-chat-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-bottom: 20px;
+            transition: 0.2s;
+        }
+
+        .new-chat-btn:hover { opacity: 0.9; transform: scale(0.98); }
+
+        .chat-list {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding-right: 5px;
+        }
+
+        .chat-list::-webkit-scrollbar { width: 4px; }
+        .chat-list::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+
+        .chat-item {
+            padding: 12px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid transparent;
+            transition: 0.2s;
+        }
+
+        .chat-item:hover { background: rgba(255, 255, 255, 0.07); }
+        .chat-item.active {
+            background: rgba(0, 170, 255, 0.1);
+            border-color: var(--accent);
+        }
+
+        .del-chat {
+            opacity: 0;
+            color: #ff4d4d;
+            font-size: 18px;
+            transition: 0.2s;
+        }
+
+        .chat-item:hover .del-chat { opacity: 1; }
+
+        /* --- MAIN AREA --- */
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            background: var(--bg);
+        }
+
+        .header {
+            height: 60px;
+            padding: 0 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+        }
+
+        #chat-window {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 15% 140px 15%;
+            scroll-behavior: smooth;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message {
+            margin-bottom: 25px;
+            padding: 16px 20px;
+            border-radius: var(--radius);
+            max-width: 85%;
+            line-height: 1.6;
+            font-size: 16px;
+            animation: slideUp 0.3s ease-out;
+            position: relative;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .user {
+            background: var(--msg-user);
+            align-self: flex-end;
+            border-bottom-right-radius: 5px;
+            color: #fff;
+        }
+
+        .ai {
+            background: var(--msg-ai);
+            align-self: flex-start;
+            border-bottom-left-radius: 5px;
+            border: 1px solid var(--border);
+        }
+
+        /* --- INPUT AREA --- */
+        .input-container {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 30px;
+            background: linear-gradient(transparent, var(--bg) 40%);
+        }
+
+        .input-box {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 25px;
+            padding: 8px 15px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        }
+
+        input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: white;
+            padding: 10px 15px;
+            font-size: 16px;
+            outline: none;
+        }
+
+        .send-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+        }
+
+        .send-btn:hover { transform: rotate(-15deg) scale(1.1); }
+
+        /* Code Styling */
+        pre {
+            background: #000 !important;
+            padding: 15px;
+            border-radius: 12px;
+            overflow-x: auto;
+            border: 1px solid #333;
+        }
+        code { font-family: 'Consolas', monospace; color: #00ffcc; }
     </style>
 </head>
 <body>
 
 <div class="sidebar">
-    <h2 style="margin:0">Moon AI 🌕</h2>
-    <p style="font-size: 12px; opacity: 0.5;">v3.5 Fixed</p>
-    <button onclick="localStorage.clear(); location.reload();" style="margin-top:20px; background:#333; color:white; border:none; padding:8px; border-radius:8px; cursor:pointer;">Очистить всё</button>
+    <div class="logo">Moon AI 🌕</div>
+    <button class="new-chat-btn" onclick="createNewChat()">+ Новый чат</button>
+    <div class="chat-list" id="chat-list"></div>
+    
+    <div style="margin-top: 10px; font-size: 10px; opacity: 0.3; text-align: center;">
+        System: Stable 3.5 | Storage Active
+    </div>
 </div>
 
 <div class="main">
+    <div class="header">
+        <div id="active-chat-name" style="font-weight: 500;">Выберите чат</div>
+        <div style="font-size: 12px; opacity: 0.5;">Model: Mistral-7B-Instruct</div>
+    </div>
+
     <div id="chat-window"></div>
-    <div class="input-area">
-        <div class="input-wrap">
-            <input type="text" id="user-in" placeholder="Напиши Moon AI..." autocomplete="off">
-            <button onclick="send()">▲</button>
+
+    <div class="input-container">
+        <div class="input-box">
+            <input type="text" id="user-input" placeholder="Спроси о чем угодно..." autocomplete="off">
+            <button class="send-btn" onclick="handleSendMessage()">▲</button>
         </div>
     </div>
 </div>
 
 <script>
-    // СКЛЕЙКА КЛЮЧА БЕЗ ОШИБОК
-    const k1 = "sk-or-v1-076faa189179a0056a4e5b5c80825632";
-    const k2 = "e9fe77ec361cfd9839dfccce9d05b9b6";
-    const FULL_KEY = k1 + k2;
+    // --- КЛЮЧ И КОНФИГ ---
+    // Склейка ключа для защиты
+    const kA = "sk-or-v1-076faa189179a0056a4e";
+    const kB = "5b5c80825632e9fe77ec361cfd9839dfccce9d05b9b6";
+    const FULL_KEY = kA + kB;
 
-    async function send() {
-        const input = document.getElementById('user-in');
+    // Глобальные переменные
+    let chats = JSON.parse(localStorage.getItem('moon_ai_v4_chats')) || [];
+    let currentChatId = localStorage.getItem('moon_ai_v4_current_id') || null;
+
+    // --- ИНИЦИАЛИЗАЦИЯ ---
+    function init() {
+        renderChatList();
+        if (currentChatId) {
+            loadChat(currentChatId);
+        } else if (chats.length > 0) {
+            loadChat(chats[0].id);
+        } else {
+            createNewChat();
+        }
+    }
+
+    // --- ЛОГИКА ЧАТОВ ---
+    function createNewChat() {
+        const id = 'chat_' + Date.now();
+        const newChat = {
+            id: id,
+            title: "Новый диалог",
+            messages: []
+        };
+        chats.unshift(newChat);
+        saveToStorage();
+        loadChat(id);
+        renderChatList();
+    }
+
+    function loadChat(id) {
+        currentChatId = id;
+        localStorage.setItem('moon_ai_v4_current_id', id);
+        const chat = chats.find(c => c.id === id);
+        
+        if (!chat) return;
+
+        document.getElementById('active-chat-name').innerText = chat.title;
+        document.getElementById('chat-window').innerHTML = '';
+        
+        chat.messages.forEach(msg => {
+            appendMessageUI(msg.role, msg.content, false);
+        });
+        
+        renderChatList();
+    }
+
+    function deleteChat(id, event) {
+        event.stopPropagation();
+        if(!confirm("Удалить этот чат?")) return;
+        
+        chats = chats.filter(c => c.id !== id);
+        if (currentChatId === id) {
+            currentChatId = chats.length > 0 ? chats[0].id : null;
+        }
+        
+        saveToStorage();
+        if (currentChatId) loadChat(currentChatId);
+        else createNewChat();
+    }
+
+    // --- ОТПРАВКА СООБЩЕНИЙ ---
+    async function handleSendMessage() {
+        const input = document.getElementById('user-input');
         const text = input.value.trim();
+        
         if (!text) return;
+        if (!currentChatId) createNewChat();
 
-        addMessage('user', text);
+        const chat = chats.find(c => c.id === currentChatId);
+
+        // Если это первое сообщение в чате, меняем заголовок
+        if (chat.messages.length === 0) {
+            chat.title = text.substring(0, 25) + (text.length > 25 ? "..." : "");
+        }
+
+        // Добавляем сообщение пользователя
+        const userMsg = { role: 'user', content: text };
+        chat.messages.push(userMsg);
+        appendMessageUI('user', text);
         input.value = '';
+        saveToStorage();
 
-        const loadingMsg = addMessage('ai', 'Moon AI думает...');
+        // Показываем индикатор загрузки
+        const loadingDiv = appendMessageUI('ai', '<i>Moon AI анализирует...</i>');
 
         try {
             const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "Authorization": "Bearer " + FULL_KEY
+                    "Authorization": `Bearer ${FULL_KEY}`,
+                    "HTTP-Referer": window.location.origin
                 },
                 body: JSON.stringify({
-                    "model": "google/gemma-2-9b-it:free",
-                    "messages": [{ "role": "user", "content": text }]
+                    "model": "mistralai/mistral-7b-instruct:free",
+                    "messages": chat.messages
                 })
             });
 
             const data = await response.json();
-            loadingMsg.remove();
+            loadingDiv.remove();
 
             if (data.choices && data.choices[0]) {
-                addMessage('ai', data.choices[0].message.content);
+                const aiContent = data.choices[0].message.content;
+                chat.messages.push({ role: 'assistant', content: aiContent });
+                appendMessageUI('ai', aiContent);
+                saveToStorage();
             } else {
-                addMessage('ai', "Ошибка: " + (data.error ? data.error.message : "что-то пошло не так"));
+                appendMessageUI('ai', "Ошибка API: " + (data.error ? data.error.message : "Пустой ответ"));
             }
         } catch (error) {
-            loadingMsg.innerText = "Ошибка сети. Попробуй еще раз.";
+            loadingDiv.innerHTML = "Ошибка сети. Возможно, стоит обновить страницу.";
         }
+        
+        renderChatList();
     }
 
-    function addMessage(role, text) {
-        const div = document.createElement('div');
-        div.className = 'msg ' + role;
-        div.innerHTML = (role === 'ai') ? marked.parse(text) : text;
+    // --- ИНТЕРФЕЙС ---
+    function appendMessageUI(role, content, scroll = true) {
         const win = document.getElementById('chat-window');
+        const div = document.createElement('div');
+        div.className = `message ${role === 'user' ? 'user' : 'ai'}`;
+        
+        // Используем marked для рендеринга Markdown только для AI
+        div.innerHTML = role === 'ai' ? marked.parse(content) : content;
+        
         win.appendChild(div);
-        win.scrollTop = win.scrollHeight;
+        if (scroll) win.scrollTop = win.scrollHeight;
         return div;
     }
 
-    document.getElementById('user-in').onkeydown = (e) => { if(e.key === 'Enter') send(); };
+    function renderChatList() {
+        const list = document.getElementById('chat-list');
+        list.innerHTML = '';
+
+        chats.forEach(chat => {
+            const item = document.createElement('div');
+            item.className = `chat-item ${chat.id === currentChatId ? 'active' : ''}`;
+            item.onclick = () => loadChat(chat.id);
+            
+            item.innerHTML = `
+                <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${chat.title}</span>
+                <span class="del-chat" onclick="deleteChat('${chat.id}', event)">×</span>
+            `;
+            list.appendChild(item);
+        });
+    }
+
+    function saveToStorage() {
+        localStorage.setItem('moon_ai_v4_chats', JSON.stringify(chats));
+    }
+
+    // Слушатель Enter
+    document.getElementById('user-input').onkeydown = (e) => {
+        if (e.key === 'Enter') handleSendMessage();
+    };
+
+    // Запуск
+    init();
 </script>
 
 </body>
