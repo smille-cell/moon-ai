@@ -3,64 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Moon AI | Stable Build</title>
+    <title>Moon AI | Stable Build v12.8</title>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/tokyo-night-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <style>
         :root { --bg: #050508; --accent: #00f2ff; --panel: #0d0d12; --text: #ffffff; }
-        body { margin: 0; background: var(--bg); color: var(--text); font-family: sans-serif; display: flex; height: 100vh; overflow: hidden; }
+        body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; display: flex; height: 100vh; overflow: hidden; }
         
+        /* Окно входа */
         #key-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: flex; align-items: center; justify-content: center; z-index: 1000; }
         .modal-content { background: var(--panel); padding: 40px; border-radius: 20px; border: 1px solid var(--accent); text-align: center; width: 90%; max-width: 400px; }
 
-        .sidebar { width: 260px; background: var(--panel); border-right: 1px solid #222; padding: 20px; display: flex; flex-direction: column; }
+        /* Сайдбар */
+        .sidebar { width: 260px; background: var(--panel); border-right: 1px solid #222; padding: 25px; display: flex; flex-direction: column; }
+        .logo { font-size: 22px; font-weight: 900; color: var(--accent); letter-spacing: 2px; }
+        
+        /* Чат */
         .main { flex: 1; display: flex; flex-direction: column; position: relative; }
         #chat { flex: 1; overflow-y: auto; padding: 20px 10%; display: flex; flex-direction: column; gap: 15px; }
         
-        .bubble { max-width: 85%; padding: 15px 20px; border-radius: 18px; line-height: 1.5; font-size: 15px; }
+        .bubble { max-width: 85%; padding: 15px 20px; border-radius: 18px; line-height: 1.5; font-size: 15px; animation: fadeIn 0.2s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        
         .user { background: #1e1e2e; align-self: flex-end; color: var(--accent); border: 1px solid #333; }
         .ai { background: #11111b; align-self: flex-start; border: 1px solid #222; }
         
+        /* Ввод */
         .input-area { padding: 25px 10%; display: flex; gap: 10px; background: var(--bg); }
         input { flex: 1; background: #111; border: 1px solid #444; color: white; padding: 12px; border-radius: 12px; outline: none; }
-        button { background: var(--accent); border: none; padding: 0 20px; border-radius: 12px; cursor: pointer; font-weight: bold; }
+        button { background: var(--accent); border: none; padding: 0 20px; border-radius: 12px; cursor: pointer; font-weight: bold; color: #000; }
         
-        pre { background: #000 !important; padding: 12px; border-radius: 10px; overflow-x: auto; border: 1px solid #222; }
+        pre { background: #000 !important; padding: 12px; border-radius: 10px; overflow-x: auto; border: 1px solid #222; margin: 10px 0; }
+        code { font-family: 'Fira Code', monospace; font-size: 14px; }
     </style>
 </head>
 <body>
 
 <div id="key-modal">
     <div class="modal-content">
-        <h2 style="color:var(--accent)">Moon AI OS</h2>
-        <input type="password" id="key-input" style="width:100%; margin: 15px 0; box-sizing: border-box;" placeholder="AIzaSy...">
+        <h2 style="color:var(--accent); margin:0;">MOON AI SYSTEM</h2>
+        <p style="opacity:0.6; font-size:13px;">Введите ваш API ключ Gemini</p>
+        <input type="password" id="key-input" style="width:100%; margin: 20px 0; box-sizing: border-box;" placeholder="AIzaSy...">
         <button onclick="saveKey()" style="width: 100%; height: 45px;">АКТИВИРОВАТЬ</button>
     </div>
 </div>
 
 <aside class="sidebar">
-    <h2 style="color:var(--accent)">MOON AI</h2>
-    <div id="status" style="font-size: 12px; opacity: 0.5;">OFFLINE</div>
-    <button onclick="localStorage.clear(); location.reload();" style="margin-top: auto; background: #222; color: #777; border: none; padding: 5px; cursor: pointer;">Сброс</button>
+    <div class="logo">MOON AI 🌕</div>
+    <div id="status" style="font-size: 11px; opacity: 0.5; margin-top: 10px;">READY</div>
+    <button onclick="localStorage.clear(); location.reload();" style="margin-top: auto; background: #222; color: #777; border: none; padding: 8px; cursor: pointer; border-radius: 8px; font-size: 11px;">Сбросить ключ</button>
 </aside>
 
 <main class="main">
     <div id="chat"></div>
     <div class="input-area">
-        <input type="text" id="msg-input" placeholder="Напиши что-нибудь..." autocomplete="off">
+        <input type="text" id="msg-input" placeholder="Спроси Луну о чем угодно..." autocomplete="off">
         <button onclick="askGemini()">ОТПРАВИТЬ</button>
     </div>
 </main>
 
 <script type="module">
     let API_KEY = localStorage.getItem('gemini_token');
-    // Используем v1beta — это самая стабильная версия сейчас
-    const URL_BASE = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+    
+    // ИСПОЛЬЗУЕМ СТАБИЛЬНЫЙ ПУТЬ v1 И МОДЕЛЬ gemini-1.5-flash
+    const API_URL = "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent";
 
     if (API_KEY) {
         document.getElementById('key-modal').style.display = 'none';
-        document.getElementById('status').innerText = "ONLINE | READY";
+        document.getElementById('status').innerText = "ONLINE | GEMINI FLASH";
     }
 
     window.saveKey = function() {
@@ -69,7 +80,7 @@
             localStorage.setItem('gemini_token', val);
             location.reload();
         } else {
-            alert("Неверный ключ!");
+            alert("Ошибка: Ключ должен начинаться с AIza");
         }
     }
 
@@ -78,15 +89,12 @@
         const text = input.value.trim();
         if (!text || !API_KEY) return;
 
-        // 1. Показываем сообщение пользователя
         addBubble('user', text);
         input.value = '';
-
-        // 2. Показываем лоадер
-        const loader = addBubble('ai', '<i>Луна обрабатывает...</i>');
+        const loader = addBubble('ai', '<i>Луна настраивает частоту...</i>');
 
         try {
-            const response = await fetch(`${URL_BASE}?key=${API_KEY}`, {
+            const response = await fetch(`${API_URL}?key=${API_KEY}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -95,23 +103,18 @@
             });
 
             const data = await response.json();
-            
-            // Убираем лоадер ТОЛЬКО когда получили ответ или ошибку
             loader.remove();
 
             if (data.candidates && data.candidates[0]) {
                 const aiText = data.candidates[0].content.parts[0].text;
                 addBubble('ai', aiText);
             } else if (data.error) {
-                // Выводим ошибку прямо в чат, чтобы понять, в чем дело
-                addBubble('ai', "<b>Ошибка API:</b> " + data.error.message);
-            } else {
-                addBubble('ai', "<b>Странный ответ от сервера.</b> Попробуй еще раз.");
+                addBubble('ai', "<b>Ошибка системы:</b> " + data.error.message);
+                console.error(data.error);
             }
         } catch (e) {
             loader.remove();
-            addBubble('ai', "<b>Ошибка сети.</b> Скорее всего, нужно включить VPN.");
-            console.error("Full error:", e);
+            addBubble('ai', "<b>Ошибка связи.</b> Пожалуйста, включи VPN.");
         }
     }
 
@@ -122,7 +125,7 @@
         
         if (role === 'ai' && !text.includes('<i>')) {
             d.innerHTML = marked.parse(text);
-            d.querySelectorAll('pre code').forEach((b) => hljs.highlightElement(b));
+            d.querySelectorAll('pre code').forEach(b => hljs.highlightElement(b));
         } else {
             d.innerHTML = text;
         }
@@ -134,6 +137,5 @@
 
     document.getElementById('msg-input').onkeydown = e => { if(e.key === 'Enter') askGemini(); };
 </script>
-
 </body>
 </html>
