@@ -3,118 +3,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Moon AI OS v5.0 Ultra</title>
+    <title>Moon AI OS v8.5 | Private Access</title>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/tokyo-night-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <style>
+        /* --- ДИЗАЙН БУДУЩЕГО --- */
         :root {
-            --bg: #09090b;
-            --sidebar: #111114;
-            --accent: #00aaff;
-            --text: #f4f4f5;
-            --msg-user: #27272a;
-            --msg-ai: #18181b;
-            --radius: 18px;
-            --border: rgba(255,255,255,0.06);
+            --bg: #050507;
+            --panel: #0f0f13;
+            --accent: #00f2ff;
+            --user-bubble: #1a1a22;
+            --ai-bubble: #121217;
+            --text: #ffffff;
+            --text-dim: #94a3b8;
+            --border: rgba(0, 242, 255, 0.1);
+            --radius: 20px;
         }
 
-        * { box-sizing: border-box; }
+        * { box-sizing: border-box; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
         body {
             margin: 0;
             display: flex;
             height: 100vh;
             background: var(--bg);
             color: var(--text);
-            font-family: 'Segoe UI', system-ui, sans-serif;
+            font-family: 'Inter', -apple-system, system-ui, sans-serif;
             overflow: hidden;
         }
 
-        /* --- SIDEBAR --- */
+        /* --- БОКОВАЯ ПАНЕЛЬ --- */
         .sidebar {
-            width: 300px;
-            background: var(--sidebar);
+            width: 320px;
+            background: var(--panel);
             border-right: 1px solid var(--border);
             display: flex;
             flex-direction: column;
-            padding: 20px;
+            padding: 25px;
+            z-index: 10;
         }
 
-        .header-logo {
-            font-size: 24px;
-            font-weight: 800;
+        .logo {
+            font-size: 28px;
+            font-weight: 900;
             color: var(--accent);
-            margin-bottom: 25px;
+            margin-bottom: 30px;
+            letter-spacing: -1px;
             display: flex;
             align-items: center;
             gap: 10px;
         }
 
-        .btn-new {
-            background: var(--accent);
-            color: white;
+        .new-chat-btn {
+            background: linear-gradient(135deg, var(--accent), #0077ff);
+            color: #000;
             border: none;
-            padding: 14px;
-            border-radius: 12px;
-            font-weight: bold;
+            padding: 16px;
+            border-radius: 16px;
+            font-weight: 800;
             cursor: pointer;
-            margin-bottom: 20px;
-            transition: 0.3s;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0, 242, 255, 0.2);
         }
 
-        .btn-new:hover { opacity: 0.9; transform: scale(0.98); }
+        .new-chat-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 242, 255, 0.4);
+        }
 
-        .chat-list {
+        .history-list {
             flex: 1;
             overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
+            margin-right: -10px;
+            padding-right: 10px;
         }
 
-        .chat-item {
-            padding: 12px;
-            background: rgba(255,255,255,0.03);
-            border-radius: 12px;
+        .history-list::-webkit-scrollbar { width: 4px; }
+        .history-list::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+
+        .history-item {
+            padding: 14px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 14px;
+            margin-bottom: 10px;
             cursor: pointer;
+            font-size: 14px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 14px;
             border: 1px solid transparent;
         }
 
-        .chat-item.active {
-            background: rgba(0, 170, 255, 0.1);
+        .history-item.active {
+            background: rgba(0, 242, 255, 0.08);
             border-color: var(--accent);
+            color: var(--accent);
         }
 
-        .chat-item:hover { background: rgba(255,255,255,0.08); }
+        .delete-btn {
+            color: #ff4444;
+            opacity: 0.3;
+            font-size: 20px;
+            padding: 0 5px;
+        }
 
-        .delete-btn { color: #ff4d4d; opacity: 0.4; cursor: pointer; font-size: 18px; }
         .delete-btn:hover { opacity: 1; }
 
-        /* --- MAIN AREA --- */
-        .main {
+        /* --- ОСНОВНАЯ ОБЛАСТЬ --- */
+        .viewport {
             flex: 1;
             display: flex;
             flex-direction: column;
             position: relative;
         }
 
-        .top-bar {
-            height: 60px;
-            border-bottom: 1px solid var(--border);
+        .navbar {
+            height: 75px;
+            padding: 0 40px;
             display: flex;
             align-items: center;
-            padding: 0 30px;
             justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(20px);
+            background: rgba(5, 5, 7, 0.7);
         }
 
-        #chat-window {
+        #chat-scroller {
             flex: 1;
             overflow-y: auto;
-            padding: 30px 15% 150px 15%;
+            padding: 40px 18% 180px 18%;
             display: flex;
             flex-direction: column;
             scroll-behavior: smooth;
@@ -122,38 +139,53 @@
 
         .bubble {
             max-width: 85%;
-            padding: 16px 20px;
+            padding: 22px 26px;
             border-radius: var(--radius);
-            margin-bottom: 20px;
-            line-height: 1.6;
+            margin-bottom: 30px;
+            line-height: 1.7;
             font-size: 16px;
-            animation: fadeIn 0.3s ease;
+            animation: emerge 0.4s ease-out;
+            position: relative;
         }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes emerge {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
-        .user { background: var(--msg-user); align-self: flex-end; border-bottom-right-radius: 4px; }
-        .ai { background: var(--msg-ai); align-self: flex-start; border-bottom-left-radius: 4px; border: 1px solid var(--border); }
+        .bubble.user {
+            background: var(--user-bubble);
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
 
-        /* --- INPUT --- */
-        .input-area {
+        .bubble.ai {
+            background: var(--ai-bubble);
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+            border: 1px solid var(--border);
+        }
+
+        /* --- ПОЛЕ ВВОДА --- */
+        .footer {
             position: absolute;
             bottom: 0;
             width: 100%;
-            padding: 30px;
-            background: linear-gradient(transparent, var(--bg) 50%);
+            padding: 40px;
+            background: linear-gradient(transparent, var(--bg) 60%);
         }
 
-        .input-box {
-            max-width: 800px;
+        .input-bar {
+            max-width: 900px;
             margin: 0 auto;
-            background: #1c1c1f;
-            border: 1px solid #333;
-            border-radius: 24px;
-            padding: 10px 18px;
+            background: #16161d;
+            border: 1px solid #2d2d35;
+            border-radius: 30px;
+            padding: 12px 25px;
             display: flex;
             align-items: center;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
         }
 
         input {
@@ -161,77 +193,76 @@
             background: transparent;
             border: none;
             color: white;
+            font-size: 17px;
             padding: 10px;
-            font-size: 16px;
             outline: none;
         }
 
         .send-btn {
             background: var(--accent);
-            color: white;
+            color: #000;
             border: none;
-            width: 42px;
-            height: 42px;
+            width: 46px;
+            height: 46px;
             border-radius: 50%;
             cursor: pointer;
-            font-size: 20px;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        /* --- CODE --- */
-        pre { background: #000 !important; border-radius: 12px; padding: 15px; overflow-x: auto; margin: 15px 0; }
-        code { font-family: 'Consolas', monospace; color: #00ffcc; }
+        /* --- КОД --- */
+        pre { background: #000 !important; border-radius: 16px; padding: 25px; margin: 20px 0; border: 1px solid #222; overflow-x: auto; }
+        code { font-family: 'Fira Code', 'Cascadia Code', monospace; font-size: 14px; }
+        .error-box { color: #ff5555; background: rgba(255, 85, 85, 0.1); border-radius: 12px; padding: 15px; margin: 10px 0; }
     </style>
 </head>
 <body>
 
 <aside class="sidebar">
-    <div class="header-logo">Moon AI 🌕</div>
-    <button class="btn-new" onclick="createNewChat()">+ Новый чат</button>
-    <div class="chat-list" id="chat-list"></div>
-    <div style="margin-top:20px; font-size: 10px; opacity:0.3; text-align:center;">Moon OS v5.0 | Protected Mode</div>
+    <div class="logo">Moon AI 🌕</div>
+    <button class="new-chat-btn" onclick="createNewChat()">+ Новый проект</button>
+    <div class="history-list" id="history-container"></div>
+    <div style="margin-top: 20px; font-size: 11px; color: var(--text-dim); text-align: center;">
+        Engine: Mistral-7B-v0.3<br>System Build: 8.5.0
+    </div>
 </aside>
 
-<main class="main">
-    <div class="top-bar">
-        <span id="current-title" style="font-weight: 600;">Готов к работе</span>
-        <span style="font-size: 11px; opacity: 0.5;">Status: Healthy</span>
+<main class="viewport">
+    <div class="navbar">
+        <span id="current-chat-title" style="font-weight: 700; font-size: 18px;">Главный терминал</span>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 8px; height: 8px; background: #00ff88; border-radius: 50%; box-shadow: 0 0 10px #00ff88;"></div>
+            <span style="font-size: 12px; color: var(--text-dim);">Безопасное соединение</span>
+        </div>
     </div>
-    
-    <div id="chat-window"></div>
 
-    <div class="input-area">
-        <div class="input-box">
-            <input type="text" id="user-input" placeholder="Спроси о чем угодно..." autocomplete="off">
-            <button class="send-btn" onclick="send()">▲</button>
+    <div id="chat-scroller"></div>
+
+    <div class="footer">
+        <div class="input-bar">
+            <input type="text" id="user-input-field" placeholder="Введите команду или вопрос..." autocomplete="off">
+            <button class="send-btn" onclick="sendMessage()">▲</button>
         </div>
     </div>
 </main>
 
 <script>
-    // --- ЗАЩИТА КЛЮЧА (Склеивание) ---
-    const partA = "sk-or-v1-";
-    const partB = "076faa189179a0056a4e";
-    const partC = "5b5c80825632e9fe77ec361cfd9839dfccce9d05b9b6";
-    const KEY = partA + partB + partC;
+    /* --- ЯДРО СИСТЕМЫ --- */
+    // Твой токен уже на месте!
+    const HF_TOKEN = "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"; 
+    const AI_MODEL_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3";
 
-    // --- МОДЕЛИ ДЛЯ АВТОПЕРЕКЛЮЧЕНИЯ ---
-    const MODELS = [
-        "meta-llama/llama-3-8b-instruct:free",
-        "mistralai/mistral-7b-instruct:free",
-        "microsoft/phi-3-mini-128k-instruct:free",
-        "openchat/openchat-7b:free"
-    ];
+    let chatDatabase = JSON.parse(localStorage.getItem('moon_ai_v85')) || [];
+    let currentActiveId = localStorage.getItem('moon_ai_active_id') || null;
 
-    let store = JSON.parse(localStorage.getItem('moon_os_v5')) || [];
-    let currentId = localStorage.getItem('moon_os_v5_id') || null;
-
-    // --- ЛОГИКА ПРИЛОЖЕНИЯ ---
     function init() {
-        renderList();
-        if (currentId && store.find(c => c.id == currentId)) {
-            loadChat(currentId);
-        } else if (store.length > 0) {
-            loadChat(store[0].id);
+        refreshHistoryUI();
+        if (currentActiveId && chatDatabase.find(c => c.id == currentActiveId)) {
+            loadChat(currentActiveId);
+        } else if (chatDatabase.length > 0) {
+            loadChat(chatDatabase[0].id);
         } else {
             createNewChat();
         }
@@ -239,120 +270,108 @@
 
     function createNewChat() {
         const id = Date.now();
-        store.unshift({ id, title: "Новый чат", messages: [] });
+        chatDatabase.unshift({ id, title: "Новая задача", messages: [] });
         save();
         loadChat(id);
     }
 
     function loadChat(id) {
-        currentId = id;
-        localStorage.setItem('moon_os_v5_id', id);
-        const chat = store.find(c => c.id == id);
-        document.getElementById('current-title').innerText = chat.title;
-        document.getElementById('chat-window').innerHTML = '';
-        chat.messages.forEach(m => addUI(m.role, m.content, false));
-        renderList();
+        currentActiveId = id;
+        localStorage.setItem('moon_ai_active_id', id);
+        const chat = chatDatabase.find(c => c.id == id);
+        document.getElementById('current-chat-title').innerText = chat.title;
+        document.getElementById('chat-scroller').innerHTML = '';
+        chat.messages.forEach(m => renderBubble(m.role, m.content, false));
+        refreshHistoryUI();
     }
 
-    async function send() {
-        const input = document.getElementById('user-input');
+    async function sendMessage() {
+        const input = document.getElementById('user-input-field');
         const text = input.value.trim();
         if (!text) return;
 
-        const chat = store.find(c => c.id == currentId);
-        if (chat.messages.length === 0) chat.title = text.substring(0, 25);
+        const chat = chatDatabase.find(c => c.id == currentActiveId);
+        if (chat.messages.length === 0) chat.title = text.substring(0, 30);
 
         chat.messages.push({ role: 'user', content: text });
-        addUI('user', text);
+        renderBubble('user', text);
         input.value = '';
         save();
 
-        const loader = addUI('ai', '<i>Соединение с сервером...</i>');
-        
-        let success = false;
-        // Цикл перебора моделей при ошибках
-        for (let model of MODELS) {
-            try {
-                const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": "Bearer " + KEY
-                    },
-                    body: JSON.stringify({
-                        "model": model,
-                        "messages": chat.messages
-                    })
-                });
+        const loader = renderBubble('ai', '<i>Луна обрабатывает запрос...</i>');
 
-                const data = await res.json();
-                
-                if (data.choices && data.choices[0]) {
-                    loader.remove();
-                    const aiText = data.choices[0].message.content;
-                    chat.messages.push({ role: 'assistant', content: aiText });
-                    addUI('ai', aiText);
-                    success = true;
-                    break; 
-                }
-            } catch (e) { console.error("Сбой модели: " + model); }
-        }
+        try {
+            const response = await fetch(AI_MODEL_URL, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${HF_TOKEN}`
+                },
+                body: JSON.stringify({
+                    inputs: `[INST] ${text} [/INST]`,
+                    parameters: { max_new_tokens: 1000, temperature: 0.7, top_p: 0.9 }
+                })
+            });
 
-        if (!success) {
-            loader.innerHTML = "<span style='color:#ffbb00'>Все каналы заняты. Попробуй еще раз через минуту.</span>";
+            const data = await response.json();
+            loader.remove();
+
+            if (data[0] && data[0].generated_text) {
+                let aiResponse = data[0].generated_text.split('[/INST]').pop().trim();
+                chat.messages.push({ role: 'assistant', content: aiResponse });
+                renderBubble('ai', aiResponse);
+            } else if (data.error) {
+                renderBubble('ai', `<div class="error-box">Ошибка сервера: ${data.error}</div>`);
+            }
+        } catch (e) {
+            loader.innerHTML = "Ошибка сети. Попробуй еще раз.";
         }
-        
         save();
-        renderList();
+        refreshHistoryUI();
     }
 
-    function addUI(role, text, scroll = true) {
-        const win = document.getElementById('chat-window');
+    function renderBubble(role, content, scroll = true) {
+        const window = document.getElementById('chat-scroller');
         const div = document.createElement('div');
         div.className = `bubble ${role === 'user' ? 'user' : 'ai'}`;
         
-        if (role === 'ai' && !text.includes('<i>')) {
-            div.innerHTML = marked.parse(text);
-            div.querySelectorAll('pre code').forEach((block) => {
-                hljs.highlightElement(block);
-            });
+        if (role === 'ai' && !content.includes('<i>') && !content.includes('error-box')) {
+            div.innerHTML = marked.parse(content);
+            div.querySelectorAll('pre code').forEach((block) => hljs.highlightElement(block));
         } else {
-            div.innerHTML = text;
+            div.innerHTML = content;
         }
         
-        win.appendChild(div);
-        if (scroll) win.scrollTop = win.scrollHeight;
+        window.appendChild(div);
+        if (scroll) window.scrollTop = window.scrollHeight;
         return div;
     }
 
-    function renderList() {
-        const list = document.getElementById('chat-list');
+    function refreshHistoryUI() {
+        const list = document.getElementById('history-container');
         list.innerHTML = '';
-        store.forEach(chat => {
+        chatDatabase.forEach(chat => {
             const item = document.createElement('div');
-            item.className = `chat-item ${chat.id == currentId ? 'active' : ''}`;
+            item.className = `history-item ${chat.id == currentActiveId ? 'active' : ''}`;
             item.onclick = () => loadChat(chat.id);
             item.innerHTML = `
-                <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap">${chat.title}</span>
-                <span class="delete-btn" onclick="deleteChat(${chat.id}, event)">×</span>
+                <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:80%">${chat.title}</span>
+                <span class="delete-btn" onclick="deleteSession(${chat.id}, event)">×</span>
             `;
             list.appendChild(item);
         });
     }
 
-    function deleteChat(id, e) {
+    function deleteSession(id, e) {
         e.stopPropagation();
-        store = store.filter(c => c.id != id);
+        chatDatabase = chatDatabase.filter(c => c.id != id);
         save();
-        if (currentId == id) currentId = null;
         init();
     }
 
-    function save() { localStorage.setItem('moon_os_v5', JSON.stringify(store)); }
+    function save() { localStorage.setItem('moon_ai_v85', JSON.stringify(chatDatabase)); }
 
-    document.getElementById('user-input').onkeydown = (e) => {
-        if (e.key === 'Enter') send();
-    };
+    document.getElementById('user-input-field').onkeydown = (e) => { if(e.key === 'Enter') sendMessage(); };
 
     init();
 </script>
